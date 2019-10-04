@@ -118,29 +118,57 @@ var result = [];
   // Produce a duplicate-free version of the array.
   _.uniq = function(array, isSorted, iterator) {
 
-//go through and store object values of each 
-var  obj = {};
+  var  obj = {}; // this set of code goes through and creates and object with all of the stuff from the array
+  var compare = function(val){
+      if (obj[val] === undefined){
+        obj[val] = 1
+      }
+      else {obj[val] += 1}
+    }
 
-
-var compare = function(val){
-  if (obj[val] === undefined){
-    obj[val] = 1
+//if given isSorted is true and iterator is defined the use it otherwise just find unique like normal
+if (iterator !== undefined && isSorted == true){
+  var empty = [];
+  for (var  i =0; i<array.length; i++){
+    empty.push(iterator(array[i]))
   }
-  else {obj[val] += 1}
+
+  var finalRes = [array[0]]; //first term will always be in there, cus result have to be [true,false] or [false, true]
+
+  _.each(empty, compare); // wil create an object with false and true
+  
+  //find the second item in object whether true or false and do indexof that item to see where it occurs in the array
+  //then push the index of array into final res
+
+  // need to convert Object.keys(obj)[1] which is "false" to false
+  var targ = true
+  if (Object.keys(obj)[1] === "false"){
+    targ = false
+  }
+
+  var index = _.indexOf(empty,targ)
+
+  finalRes.push(array[index])
+
+  return finalRes;
 }
-_.each(array, compare)
-var result = Object.keys(obj)
-var finalRes = [];
+else{
+  //go through and store object values of each 
 
-for (var i = 0; i<result.length; i++){
-  finalRes.push(Number(result[i]))
-}
+  _.each(array, compare) //compare makes the object with note of each item
+
+  var result = Object.keys(obj)
+  var finalRes = [];
+
+  for (var i = 0; i<result.length; i++){
+    finalRes.push(Number(result[i]))
+  }
+  return finalRes
+}   
 
 
 
-
-return finalRes
-  };
+};
 
 
   // Return the results of applying an iterator to each element.
@@ -148,6 +176,13 @@ return finalRes
     // map() is a useful primitive iteration function that works a lot
     // like each(), but in addition to running the operation on all
     // the members, it also maintains an array of results.
+    var result = [];
+    for (var j =0; j<collection.length; j++){
+      result.push(iterator(collection[j]))
+    }
+
+    return result;
+
   };
 
   /*
@@ -189,6 +224,25 @@ return finalRes
   //   }); // should be 5, regardless of the iterator function passed in
   //          No accumulator is given so the first element is used.
   _.reduce = function(collection, iterator, accumulator) {
+    
+    if(accumulator === undefined){
+      accumulator = collection[0];
+
+      for (var i =1; i<collection.length; i++){
+        accumulator = iterator(accumulator,collection[i]) //takes the total/accumlator from last time and a pass in
+
+    }
+
+
+    }
+    else{ for (var i =0; i<collection.length; i++){
+        accumulator = iterator(accumulator,collection[i]) //takes the total/accumlator from last time and a pass in
+
+    }
+  } 
+
+   
+    return accumulator
   };
 
   // Determine if the array or object contains a given value (using `===`).

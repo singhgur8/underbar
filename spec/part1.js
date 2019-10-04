@@ -346,7 +346,7 @@
         var iterator = function(value) { return value === 1; };
         var numbers = [1, 2, 2, 3, 4, 4];
 
-        expect(_.uniq(numbers)).to.eql([1, 2]); // I can solve this by just setting the right side equal to 1234...but thats not right way.
+        expect(_.uniq(numbers,true,iterator)).to.eql([1, 2]); 
       });
 
       it('should produce a brand new array instead of modifying the input array', function() {
