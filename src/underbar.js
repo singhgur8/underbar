@@ -7,6 +7,7 @@
   // seem very useful, but remember it--if a function needs to provide an
   // iterator when the user does not pass one in, this will be handy.
   _.identity = function(val) {
+    return val
   };
 
   /**
@@ -37,6 +38,8 @@
   // Like first, but for the last elements. If n is undefined, return just the
   // last element.
   _.last = function(array, n) {
+    array = array.reverse()
+    return n === undefined ? array[0] : array.slice(0, n).reverse();
   };
 
   // Call iterator(value, key, collection) for each element of collection.
@@ -45,6 +48,24 @@
   // Note: _.each does not have a return value, but rather simply runs the
   // iterator function over each item in the input collection.
   _.each = function(collection, iterator) {
+
+  // collection is the array/object
+  //this collection.length wont work for objects...so i need to do if statement and check if Array.isArray(collection)
+
+
+  if (Array.isArray(collection) || (typeof collection == "string")) {for (var i = 0; i<collection.length; i++){
+
+    iterator(collection[i],i,collection)
+
+    }
+  }
+  else{ 
+
+    var key = Object.keys(collection)
+    for (var j =0; j<key.length; j++){
+      iterator(collection[key[j]],key[j],collection)} //
+    }
+
   };
 
   // Returns the index at which value can be found in the array, or -1 if value
@@ -66,16 +87,59 @@
 
   // Return all elements of an array that pass a truth test.
   _.filter = function(collection, test) {
+
+    var result = [];
+    _.each(collection,function (item){
+      if(test(item) === true){
+        result.push(item)
+      }
+    })
+
+    return result
+
   };
 
   // Return all elements of an array that don't pass a truth test.
   _.reject = function(collection, test) {
     // TIP: see if you can re-use _.filter() here, without simply
     // copying code in and modifying it
+    //_.filter(collection, !test) WHY doesn't this work?...I am basically filtering all of the fails
+var result = [];
+    _.each(collection,function (item){
+      if(test(item) !== true){
+        result.push(item)
+      }
+    })
+
+    return result
+
   };
 
   // Produce a duplicate-free version of the array.
   _.uniq = function(array, isSorted, iterator) {
+
+//go through and store object values of each 
+var  obj = {};
+
+
+var compare = function(val){
+  if (obj[val] === undefined){
+    obj[val] = 1
+  }
+  else {obj[val] += 1}
+}
+_.each(array, compare)
+var result = Object.keys(obj)
+var finalRes = [];
+
+for (var i = 0; i<result.length; i++){
+  finalRes.push(Number(result[i]))
+}
+
+
+
+
+return finalRes
   };
 
 
