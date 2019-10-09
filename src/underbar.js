@@ -59,7 +59,7 @@
 
     }
   }
-  else{ 
+  else{
 
     var key = Object.keys(collection)
     for (var j =0; j<key.length; j++){
@@ -136,7 +136,7 @@ if (iterator !== undefined && isSorted == true){
   var finalRes = [array[0]]; //first term will always be in there, cus result have to be [true,false] or [false, true]
 
   _.each(empty, compare); // wil create an object with false and true
-  
+
   //find the second item in object whether true or false and do indexof that item to see where it occurs in the array
   //then push the index of array into final res
 
@@ -153,7 +153,7 @@ if (iterator !== undefined && isSorted == true){
   return finalRes;
 }
 else{
-  //go through and store object values of each 
+  //go through and store object values of each
 
   _.each(array, compare) //compare makes the object with note of each item
 
@@ -164,7 +164,7 @@ else{
     finalRes.push(Number(result[i]))
   }
   return finalRes
-}   
+}
 
 
 
@@ -206,25 +206,25 @@ else{
   // Reduces an array or object to a single value by repetitively calling
   // iterator(accumulator, item) for each item. accumulator should be
   // the return value of the previous iterator call.
-  //  
+  //
   // You can pass in a starting value for the accumulator as the third argument
   // to reduce. If no starting value is passed, the first element is used as
   // the accumulator, and is never passed to the iterator. In other words, in
   // the case where a starting value is not passed, the iterator is not invoked
   // until the second element, with the first element as its second argument.
-  //  
+  //
   // Example:
   //   var numbers = [1,2,3];
   //   var sum = _.reduce(numbers, function(total, number){
   //     return total + number;
   //   }, 0); // should be 6
-  //  
+  //
   //   var identity = _.reduce([5], function(total, number){
   //     return total + number * number;
   //   }); // should be 5, regardless of the iterator function passed in
   //          No accumulator is given so the first element is used.
   _.reduce = function(collection, iterator, accumulator) {
-    
+
     if(accumulator === undefined){
       accumulator = collection[0];
 
@@ -239,9 +239,9 @@ else{
         accumulator = iterator(accumulator,collection[i]) //takes the total/accumlator from last time and a pass in
 
     }
-  } 
+  }
 
-   
+
     return accumulator
   };
 
@@ -249,25 +249,78 @@ else{
   _.contains = function(collection, target) {
     // TIP: Many iteration problems can be most easily expressed in
     // terms of reduce(). Here's a freebie to demonstrate!
-    return _.reduce(collection, function(wasFound, item) {
-      if (wasFound) {
-        return true;
-      }
-      return item === target;
-    }, false);
+    if (Array.isArray(collection) || (typeof collection == "string")) {
+      return _.reduce(collection, function(wasFound, item) {
+        if (wasFound) {
+          return true;
+        }
+        return item === target;
+      }, false);
+    }
+    else{
+      collection = Object.values(collection);
+      return _.reduce(collection, function(wasFound, item) {
+        if (wasFound) {
+          return true;
+        }
+        return item === target;
+      }, false);
+    }
   };
 
 
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
+    // iterator is identity...and then later isEven etc...
+
+    if(iterator !== undefined){
+      collection = _.map(collection,iterator)
+    } // if iterator no defined it does apply it
+
+
+
     // TIP: Try re-using reduce() here.
+    return _.reduce(collection,function(isTrue,iterator){
+      if (!!iterator === true && isTrue === true){ //can't use deeply equal
+        return true //basically this logic is that if it is ever false, it will keep looping into the false category
+      }
+      return false
+    },true)
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
-  };
+if (collection.length === 0){
+  return false;
+}
+
+// use map to create inverted of collection...consider applying iterator function first
+//want to apply the interator inside of map so i dont do it calledTwice
+//dont include the iterator inside the .every call for the inverter then
+if(iterator !== undefined){
+  collection = _.map(collection,iterator)
+} // if iterator no defined it does apply it
+
+var collectionInverted = _.map(collection, function(item){
+
+ if (!!item === true){
+   return false
+ }
+ else { return true}
+})
+
+if (_.every(collection,_.identity) === true){
+  return true
+}
+else if (_.every(collectionInverted,_.identity) === false && _.every(collection,_.identity) === false){
+  return true
+}
+else {return false}
+}
+
+
 
 
   /**
@@ -288,12 +341,45 @@ else{
   //   }, {
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
+
   _.extend = function(obj) {
-  };
+var keys = [];
+var values = [];
+for (var i=1; i<arguments.length; i++){
+
+  keys.push(Object.keys(arguments[i]))
+  values.push(Object.values(arguments[i]))
+  }
+  keys =  keys.flat()
+  values = values.flat()
+
+  for (var j = 0; j<keys.length; j++){
+
+        obj[keys[j]] = values[j]
+
+  }
+  return obj
+};
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    var keys = [];
+    var values = [];
+    for (var i=1; i<arguments.length; i++){
+
+      keys.push(Object.keys(arguments[i]))
+      values.push(Object.values(arguments[i]))
+      }
+      keys =  keys.flat()
+      values = values.flat()
+
+      for (var j = 0; j<keys.length; j++){
+          if (obj[keys[j]] === undefined){
+            obj[keys[j]] = values[j]
+          }
+      }
+      return obj
   };
 
 
@@ -337,6 +423,49 @@ else{
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var result;
+    //cant just flag the same way becasue i need it to run if the inputs are diff
+    //need to cross the inputs with arguments list
+    var alreadyCalled = false;
+    var argumentsList = [];
+
+    //if the cross ref function is outside the return statement then it
+    //runs its course before entering return ever which doesn't help us
+    //becasue there is no arguments list at this point
+
+
+    return function(){
+      //cross ref the args list with the list of inputs?
+      (function(){
+        //when the argument enter here it loses input from above function
+        //so it is comparing argslist to nothing
+        for (var i =0; i <argumentsList.length; i++){
+          for(var j=0; j<argumentsList[i].length;j++){
+          //assume its a matching, so cross each thing in array
+            if(JSON.stringify(arguments[j]) !== JSON.stringify(argumentsList[i][j])){
+              return alreadyCalled = false
+              }
+            }
+          return alreadyCalled = true
+        }
+      })(arguments) //self initiating function. had to create function so return statemetns
+      //dont stop the rest of the func early
+      // need to check if arrays match, then run below code on if statement
+
+
+      if(!alreadyCalled){
+        result = func.apply(this,arguments)
+        var emptyArr = [];
+        emptyArr.push(arguments)
+        argumentsList.push(emptyArr) // needs to be pushed in as pairs
+      }
+
+      return result //if it has been called before, it skips here, then
+      //this needs to retrieve from the object bank...where arrays and their
+      //results are kept?? somehow it worked without it...but how does it know
+      //what result i am referring to..?
+    }
+
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -346,6 +475,19 @@ else{
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    // needs to run settimeout first
+    //how can i pass in the arguments from the top function to this?
+    //var args = Array.prototype.slice.call(arguments, 2) // converts then slices arguements into an array
+    var args = [];
+    args.push(arguments[2])
+    args.push(arguments[3])
+    setTimeout(function(){
+        func.apply(this,args) //basically we use a function from a different objects
+        //and apply it to this object/function and use these input args
+        //since we are using apply instead of call, the arguments have to be
+        //grouped into an array.
+      }, wait);
+
   };
 
 
@@ -360,7 +502,51 @@ else{
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
-  };
+      var newArr = array.slice(); //so we don't touch orignal arr
+      var result = []; //push randomized stuff into this
+
+      //create a cache, while this doesnt equal length of the array, keep running
+      //add a new number to the cache everytime the index is used
+
+      var cache = {}; //going to use objects so i can just check if things exists
+      //dont need to iterate thru
+
+      var arrIsComplete = false;
+
+      var check = function(prop){
+        if (_.indexOf(prop, ) === -1 && prop.length === newArr.length){
+          return arrIsComplete = true
+        }
+      }
+
+
+      var counter = 0; // initialized, this will be used to add stuff from newArr to result
+
+  //this whil statement wont work becaus it counts length of arr even if its emptyArr
+  //so i need a funciton to check if the length is right and no empty cells
+
+      while (arrIsComplete === false){
+        //generate random index
+      var rando = Math.floor(Math.random()*newArr.length)
+
+        if (cache[rando] === undefined){ //if it hasn't been used before
+        cache[rando] = 1 //the value does not matter
+
+        //so rando is the random index
+        result[rando] = newArr[counter]
+        counter ++
+
+      }
+
+      var keys = Object.keys(cache)
+
+      check(keys)
+
+    }
+
+  return result
+
+    };
 
 
   /**
